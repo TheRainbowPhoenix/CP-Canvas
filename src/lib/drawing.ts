@@ -207,6 +207,153 @@ export function line(
 	}
 }
 
+// prettier-ignore
+export function textWrap(
+	x: number,
+	y: number,
+	width: number,
+	height: number,
+	text: string,
+	colorFill?: RGBColor,
+	colorShadow?: RGBColor
+) {
+	if (!colorFill) {
+		colorFill = hexToRgb("#5A595A");
+	}
+	if (!colorShadow) {
+		colorShadow = hexToRgb("#E7E3E7");
+	}
+
+	const fh = 18;
+	let _x = 0;
+	let _y = 0;
+	let cur_x = 0;
+	let cur_y = 0;
+
+	for (let l of text) {
+		_x = -1;
+		_y = 0;
+
+		const stubLetter = [
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1,
+			1, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0,
+			0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0,
+			0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 1,
+			1, 0, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1,
+			0, 2, 2, 2, 2, 2, 2, 2, 2, 0, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		];
+
+		let char = stubLetter; // TODO: load form map
+
+		const letter_width = stubLetter.length / fh;
+
+		// overflow tests
+
+		// overflow-x : wrap
+		if (cur_x + letter_width > width) {
+			cur_x = 0;
+			cur_y += fh;
+		}
+
+		// overflow-y : hidden
+		if (cur_y + fh > height) {
+			break;
+		}
+
+		for (let c_y = 0; c_y < fh; c_y++) {
+			for (let c_x = 0; c_x < letter_width; c_x++) {
+				let pxl_val = char[c_y * letter_width + c_x];
+
+				if (pxl_val > 0) {
+					let px_x = x + cur_x + c_x;
+					let px_y = y + cur_y + c_y;
+
+					let color = pxl_val === 2 ? colorShadow : colorFill;
+					setPixel(px_x, px_y, color);
+				}
+			}
+		}
+
+		cur_x += letter_width; // TODO: test max length ?
+	}
+}
+
+// prettier-ignore
+export function text(
+	x: number,
+	y: number,
+	text: string,
+	colorFill?: RGBColor,
+	colorShadow?: RGBColor
+) {
+	if (!colorFill) {
+		colorFill = hexToRgb("#5A595A");
+	}
+	if (!colorShadow) {
+		colorShadow = hexToRgb("#E7E3E7");
+	}
+
+	const fh = 18;
+	let _x = 0;
+	let _y = 0;
+	let cur_x = 0;
+	let cur_y = 0;
+
+	for (let l of text) {
+		_x = -1;
+		_y = 0;
+
+		const stubLetter = [
+			0,0,0,0, 0,0,0,0,0,
+			1,1,1,1, 1,1,1,1,0,
+			1,1,1,1, 1,1,1,1,0,
+			1,1,0,0, 0,0,1,1,0,
+			1,1,0,0, 0,0,1,1,0,
+			1,1,0,0, 0,0,1,1,0,
+			1,1,0,0, 0,0,1,1,0,
+			1,1,0,0, 0,0,1,1,0,
+			1,1,0,0, 0,0,1,1,0,
+			1,1,0,0, 0,0,1,1,0,
+			1,1,0,0, 0,0,1,1,0,
+			1,1,0,0, 0,0,1,1,0,
+			1,1,1,1, 1,1,1,1,0,
+			1,1,1,1, 1,1,1,1,0,
+			2,2,2,2, 2,2,2,2,0,
+			2,2,2,2, 2,2,2,2,0,
+			0,0,0,0, 0,0,0,0,0,
+			0,0,0,0, 0,0,0,0,0,
+		];
+
+		
+		let char = stubLetter; // TODO: load form map
+
+		const letter_width = stubLetter.length / fh;
+
+		for (let c_y = 0; c_y < fh; c_y++) {
+			for (let c_x = 0; c_x < letter_width; c_x++) {
+				let pxl_val = char[(c_y * letter_width) + c_x];
+
+				if (pxl_val > 0) {
+					let px_x = x + cur_x + c_x;
+					let px_y = y + cur_y + c_y;
+
+					let color = pxl_val === 2 ? colorShadow : colorFill;
+					setPixel(px_x, px_y, color);
+				}
+			}
+		}
+		 
+
+		cur_x += letter_width; // TODO: test max length ?
+		
+
+		
+	}
+	// ctx.font = "48px serif";
+	// ctx.fillText("Hello world", 10, 50);
+}
+
 export function triangle(
 	x0: number,
 	y0: number,

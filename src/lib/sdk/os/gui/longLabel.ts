@@ -1,3 +1,4 @@
+import { hexToRgb, text, textWrap } from "../../../drawing";
 import { GUIElement, type VTableFunctionType } from "./util";
 
 interface GUILongLabel_Wrapped_VTable {
@@ -13,6 +14,12 @@ interface GUILongLabel_Wrapped {
 
 // GUILongLabel class
 export class GUILongLabel extends GUIElement {
+	x: number;
+	y: number;
+	rightX: number;
+	bottomY: number;
+	text: string;
+
 	constructor(
 		leftX: number,
 		topY: number,
@@ -21,7 +28,27 @@ export class GUILongLabel extends GUIElement {
 		text: string
 	) {
 		super();
+
+		this.text = text;
+		this.x = leftX;
+		this.y = topY;
+		this.rightX = rightX;
+		this.bottomY = bottomY;
+
 		// GUILongLabel_ctor(this, [leftX, topY, rightX, bottomY], 0, 0, text, 0);
+	}
+
+	Draw(): void {
+		// TODO: manage wrapping
+		textWrap(
+			this.x,
+			this.y,
+			this.rightX - this.x,
+			this.bottomY - this.y,
+			this.text,
+			hexToRgb("#5A595A"),
+			hexToRgb("#E7E3E7")
+		);
 	}
 
 	SetText(text: string): void {

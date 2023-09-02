@@ -1,6 +1,6 @@
 import { get } from "svelte/store";
 import { width as sWidth, height as sHeight } from "../../../../specs";
-import { hexToRgb, LCD_Refresh, line, rectangle } from "../../../drawing";
+import { hexToRgb, LCD_Refresh, line, rectangle, text } from "../../../drawing";
 import { Alignment, Height, type KeyboardState } from "../gui";
 import {
 	Wrapped,
@@ -35,21 +35,24 @@ export interface GUIDialog_OnEvent_Data {
 
 // GUIDialog class
 export class GUIDialog extends Wrapped {
+	headerSize: number = 31;
+
 	wrapped: GUIDialog_Wrapped;
+	title: string;
 
 	static Height = {
-		Height25: 0,
-		Height55: 1,
-		Height75: 2,
-		Height95: 3,
+		Height25: 0, // CP_DIALOG_SIZE_QUARTER
+		Height55: 1, // CP_DIALOG_SIZE_HALF
+		Height75: 2, // CP_DIALOG_SIZE_THREE_QUARTER
+		Height95: 3, // CP_DIALOG_SIZE_FULL
 		Height35: 4,
 		Height60: 5,
 	};
 
 	static Alignment = {
-		AlignTop: 0,
-		AlignCenter: 1,
-		AlignBottom: 2,
+		AlignTop: 0, // CP_DIALOG_POS_TOP
+		AlignCenter: 1, // CP_DIALOG_POS_CENTER
+		AlignBottom: 2, // CP_DIALOG_POS_BOTTOM
 	};
 
 	static KeyboardState = {
@@ -77,6 +80,7 @@ export class GUIDialog extends Wrapped {
 		keyboard: KeyboardState
 	) {
 		super();
+		this.title = title;
 
 		this.wrapped = GUIDialog_ctor(
 			this,
@@ -94,9 +98,9 @@ export class GUIDialog extends Wrapped {
 		// Header
 		rectangle(
 			this.GetLeftX(),
-			this.GetTopY(),
+			this._topY,
 			this.width,
-			this.GetTopY() + 31,
+			this._topY + this.headerSize,
 			hexToRgb("#6B696B")
 		);
 		// Bg
@@ -108,34 +112,34 @@ export class GUIDialog extends Wrapped {
 
 			line(
 				this.GetLeftX() + i + 1,
-				this.GetTopY() + 2 * i,
+				this._topY + 2 * i,
 				this.GetLeftX() + i + 1,
-				this.GetTopY() + 30,
+				this._topY + 30,
 				hexToRgb(color)
 			);
 
 			line(
 				this.GetRightX() - i - 2,
-				this.GetTopY() + 2 * i,
+				this._topY + 2 * i,
 				this.GetRightX() - i - 2,
-				this.GetTopY() + 30,
+				this._topY + 30,
 				hexToRgb(color)
 			);
 		}
 
 		line(
 			this.GetLeftX(),
-			this.GetTopY(),
+			this._topY,
 			this.GetLeftX(),
-			this.GetTopY() + 30,
+			this._topY + 30,
 			hexToRgb("#101010")
 		);
 
 		line(
 			this.GetRightX() - 1,
-			this.GetTopY(),
+			this._topY,
 			this.GetRightX() - 1,
-			this.GetTopY() + 30,
+			this._topY + 30,
 			hexToRgb("#101010")
 		);
 
@@ -143,131 +147,139 @@ export class GUIDialog extends Wrapped {
 
 		line(
 			this.GetLeftX(),
-			this.GetTopY(),
+			this._topY,
 			this.GetRightX() - 1,
-			this.GetTopY(),
+			this._topY,
 			hexToRgb("#080808")
 		);
 
 		line(
 			this.GetLeftX() + 1,
-			this.GetTopY() + 1,
+			this._topY + 1,
 			this.GetRightX() - 2,
-			this.GetTopY() + 1,
+			this._topY + 1,
 			hexToRgb("#080808")
 		);
 
 		line(
 			this.GetLeftX() + 1,
-			this.GetTopY() + 2,
+			this._topY + 2,
 			this.GetRightX() - 2,
-			this.GetTopY() + 2,
+			this._topY + 2,
 			hexToRgb("#181818")
 		);
 
 		line(
 			this.GetLeftX() + 1,
-			this.GetTopY() + 3,
+			this._topY + 3,
 			this.GetRightX() - 2,
-			this.GetTopY() + 3,
+			this._topY + 3,
 			hexToRgb("#212021")
 		);
 
 		line(
 			this.GetLeftX() + 1,
-			this.GetTopY() + 4,
+			this._topY + 4,
 			this.GetRightX() - 2,
-			this.GetTopY() + 4,
+			this._topY + 4,
 			hexToRgb("#292829")
 		);
 
 		line(
 			this.GetLeftX() + 1,
-			this.GetTopY() + 5,
+			this._topY + 5,
 			this.GetRightX() - 2,
-			this.GetTopY() + 5,
+			this._topY + 5,
 			hexToRgb("#313031")
 		);
 
 		line(
 			this.GetLeftX() + 2,
-			this.GetTopY() + 6,
+			this._topY + 6,
 			this.GetRightX() - 3,
-			this.GetTopY() + 6,
+			this._topY + 6,
 			hexToRgb("#393839")
 		);
 
 		line(
 			this.GetLeftX() + 3,
-			this.GetTopY() + 7,
+			this._topY + 7,
 			this.GetRightX() - 4,
-			this.GetTopY() + 7,
+			this._topY + 7,
 			hexToRgb("#4A494A")
 		);
 
 		line(
 			this.GetLeftX() + 3,
-			this.GetTopY() + 8,
+			this._topY + 8,
 			this.GetRightX() - 4,
-			this.GetTopY() + 8,
+			this._topY + 8,
 			hexToRgb("#525152")
 		);
 
 		line(
 			this.GetLeftX() + 4,
-			this.GetTopY() + 9,
+			this._topY + 9,
 			this.GetRightX() - 5,
-			this.GetTopY() + 9,
+			this._topY + 9,
 			hexToRgb("#5A595A")
 		);
 
 		// bot
 		line(
 			this.GetLeftX() + 4,
-			this.GetTopY() + 26,
+			this._topY + 26,
 			this.GetRightX() - 5,
-			this.GetTopY() + 26,
+			this._topY + 26,
 			hexToRgb("#5A595A")
 		);
 		line(
 			this.GetLeftX() + 3,
-			this.GetTopY() + 27,
+			this._topY + 27,
 			this.GetRightX() - 4,
-			this.GetTopY() + 27,
+			this._topY + 27,
 			hexToRgb("#525152")
 		);
 
 		line(
 			this.GetLeftX() + 2,
-			this.GetTopY() + 28,
+			this._topY + 28,
 			this.GetRightX() - 3,
-			this.GetTopY() + 28,
+			this._topY + 28,
 			hexToRgb("#4A494A")
 		);
 
 		line(
 			this.GetLeftX() + 1,
-			this.GetTopY() + 29,
+			this._topY + 29,
 			this.GetRightX() - 2,
-			this.GetTopY() + 29,
+			this._topY + 29,
 			hexToRgb("#292829")
 		);
 
 		line(
 			this.GetLeftX(),
-			this.GetTopY() + 30,
+			this._topY + 30,
 			this.GetRightX() - 1,
-			this.GetTopY() + 30,
+			this._topY + 30,
 			hexToRgb("#181818")
 		);
 
 		// light line
 		line(
 			this.GetLeftX() + 2,
-			this.GetTopY() + 1,
+			this._topY + 1,
 			this.width - 1,
-			this.GetTopY() + 1,
+			this._topY + 1,
 			hexToRgb("#A5A2A5")
+		);
+
+		text(
+			this.GetLeftX() + 12,
+			this._topY + 8,
+			this.title,
+			hexToRgb("#fff"),
+			hexToRgb("#000")
 		);
 
 		// END HEADER
@@ -277,7 +289,7 @@ export class GUIDialog extends Wrapped {
 
 		rectangle(
 			this.GetLeftX(),
-			this.GetTopY() + 31,
+			this._topY + 31,
 			this.GetRightX(),
 			this.GetBottomY() - 31 - 5,
 			hexToRgb("#fff")
@@ -286,7 +298,7 @@ export class GUIDialog extends Wrapped {
 		// Border
 		line(
 			this.GetLeftX(),
-			this.GetTopY() + 31,
+			this._topY + 31,
 			this.GetLeftX(),
 			this.GetBottomY() - 6,
 			hexToRgb("#5A595A")
@@ -300,7 +312,7 @@ export class GUIDialog extends Wrapped {
 		);
 		line(
 			this.GetRightX() - 1,
-			this.GetTopY() + 31,
+			this._topY + 31,
 			this.GetRightX() - 1,
 			this.GetBottomY() - 6,
 			hexToRgb("#5A595A")
@@ -310,37 +322,37 @@ export class GUIDialog extends Wrapped {
 		// Top lines
 		line(
 			this.GetLeftX() + 1,
-			this.GetTopY() + 31,
+			this._topY + 31,
 			this.GetRightX() - 2,
-			this.GetTopY() + 31,
+			this._topY + 31,
 			hexToRgb("#BDBABD")
 		);
 		line(
 			this.GetLeftX() + 1,
-			this.GetTopY() + 32,
+			this._topY + 32,
 			this.GetRightX() - 2,
-			this.GetTopY() + 32,
+			this._topY + 32,
 			hexToRgb("#ADAAAD")
 		);
 		line(
 			this.GetLeftX() + 2,
-			this.GetTopY() + 33,
+			this._topY + 33,
 			this.GetRightX() - 3,
-			this.GetTopY() + 33,
+			this._topY + 33,
 			hexToRgb("#CECBCE")
 		);
 		line(
 			this.GetLeftX() + 3,
-			this.GetTopY() + 34,
+			this._topY + 34,
 			this.GetRightX() - 4,
-			this.GetTopY() + 34,
+			this._topY + 34,
 			hexToRgb("#E7E3E7")
 		);
 		line(
 			this.GetLeftX() + 4,
-			this.GetTopY() + 35,
+			this._topY + 35,
 			this.GetRightX() - 2,
-			this.GetTopY() + 35,
+			this._topY + 35,
 			hexToRgb("#F7F3F7")
 		);
 
@@ -350,7 +362,7 @@ export class GUIDialog extends Wrapped {
 
 			line(
 				this.GetLeftX() + 1 + i,
-				this.GetTopY() + 31 + 2 + i,
+				this._topY + 31 + 2 + i,
 				this.GetLeftX() + 1 + i,
 				this.GetBottomY() - 6 - 1,
 				hexToRgb(color)
@@ -358,7 +370,7 @@ export class GUIDialog extends Wrapped {
 
 			line(
 				this.GetRightX() - 2 - i,
-				this.GetTopY() + 31 + 2 + i,
+				this._topY + 31 + 2 + i,
 				this.GetRightX() - 2 - i,
 				this.GetBottomY() - 6 - 1,
 				hexToRgb(color)
@@ -387,6 +399,8 @@ export class GUIDialog extends Wrapped {
 				hexToRgb(color)
 			);
 		}
+
+		// Body
 	}
 
 	OnEvent(dialog: GUIDialog_Wrapped, event: GUIDialog_OnEvent_Data): number {
@@ -397,8 +411,12 @@ export class GUIDialog extends Wrapped {
 		return this.wrapped.leftX;
 	}
 
-	GetTopY(): number {
+	private get _topY(): number {
 		return this.wrapped.topY;
+	}
+
+	GetTopY(): number {
+		return this.wrapped.topY + this.headerSize;
 	}
 
 	GetRightX(): number {
@@ -410,7 +428,7 @@ export class GUIDialog extends Wrapped {
 	}
 
 	public get height(): number {
-		return this.GetBottomY() - this.GetTopY();
+		return this.GetBottomY() - this._topY;
 	}
 
 	GetBottomY(): number {
@@ -418,7 +436,7 @@ export class GUIDialog extends Wrapped {
 	}
 
 	AddElement(element: any): void {
-		// GUIDialog_AddElement(this, element, 0); // unknown0
+		GUIDialog_AddElement(this, element, 0); // unknown0
 	}
 
 	Refresh(): void {
@@ -500,11 +518,13 @@ declare function GUIDialog_OnEvent_Wrap(
 	event: GUIDialog_OnEvent_Data
 ): number;
 
-declare function GUIDialog_AddElement(
+export function GUIDialog_AddElement(
 	dialog: GUIDialog,
 	element: any,
 	unknown0: number
-): void;
+): void {
+	dialog.Add(element);
+}
 
 declare function GUIDialog_Refresh(dialog: GUIDialog): void;
 

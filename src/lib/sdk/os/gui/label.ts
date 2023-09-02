@@ -1,3 +1,4 @@
+import { hexToRgb, text } from "../../../drawing";
 import { GUIElement } from "./util";
 
 export class GUILabel extends GUIElement {
@@ -5,6 +6,10 @@ export class GUILabel extends GUIElement {
 		FlagBackground: 1 << 0,
 		FlagSelectable: 1 << 15,
 	};
+
+	x: number;
+	y: number;
+	text: string;
 
 	constructor(
 		x: number,
@@ -18,6 +23,10 @@ export class GUILabel extends GUIElement {
 	) {
 		super();
 
+		this.text = text;
+		this.x = x;
+		this.y = y;
+
 		// Handle optional parameters
 		flags = flags || 0;
 		textColor = textColor || new Uint16Array(1);
@@ -30,25 +39,29 @@ export class GUILabel extends GUIElement {
 		const unknown0 = 0;
 		const unknown1 = 0;
 
-		// GUILabel_ctor(
-		// 	this,
-		// 	x,
-		// 	y,
-		// 	text,
-		// 	unknown0,
-		// 	flags,
-		// 	font,
-		// 	textColor,
-		// 	backgroundColor,
-		// 	showShadow,
-		// 	shadowColor,
-		// 	unknown1
-		// );
+		GUILabel_ctor(
+			this,
+			x,
+			y,
+			text,
+			unknown0,
+			flags,
+			font,
+			textColor,
+			backgroundColor,
+			showShadow,
+			shadowColor,
+			unknown1
+		);
+	}
+
+	Draw(): void {
+		text(this.x, this.y, this.text, hexToRgb("#5A595A"), hexToRgb("#E7E3E7"));
 	}
 }
 
 // External function declaration (you need to provide the implementation)
-declare function GUILabel_ctor(
+export function GUILabel_ctor(
 	label: GUILabel,
 	x: number,
 	y: number,
@@ -61,4 +74,4 @@ declare function GUILabel_ctor(
 	showShadow: boolean,
 	shadowColor: number,
 	unknown1: number
-);
+): void {}

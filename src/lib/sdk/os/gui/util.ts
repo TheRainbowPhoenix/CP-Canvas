@@ -52,9 +52,13 @@ export class Wrapped {
 		return this.m_wrapped;
 	}
 
+	Add(elem: Wrapped) {
+		this.children.push(elem);
+	}
+
 	doDraw(): void {
-		console.log("Base::doDraw");
 		if (!this.isChanged) return;
+		console.log("Base::doDraw");
 
 		this.Draw();
 
