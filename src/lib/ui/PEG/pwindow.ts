@@ -1,227 +1,370 @@
 import type { BOOL, DWORD, UCHAR, WORD } from "../native/windows";
 import { PegThing } from "./pthing";
-import { CF_FILL, FF_MASK, FF_NONE, FF_RAISED, FF_RECESSED, FF_THICK, FF_THIN, PCI_NORMAL, PCLR_BORDER, PCLR_CLIENT, PCLR_DIALOG, PCLR_HIGHLIGHT, PCLR_LOWLIGHT, PCLR_SHADOW, PegColor, PegPoint, PegRect, PSF_ACCEPTS_FOCUS, PSF_CURRENT, PSF_MOVEABLE, PSF_NONCLIENT, PSF_SIZEABLE, PSF_TAB_STOP, PSF_VIEWPORT, PSF_VISIBLE, TYPE_WINDOW, type PegBitmap, type SIGNED } from "./pegtypes";
+import {
+	CF_FILL,
+	FF_MASK,
+	FF_NONE,
+	FF_RAISED,
+	FF_RECESSED,
+	FF_THICK,
+	FF_THIN,
+	PCI_NORMAL,
+	PCLR_BORDER,
+	PCLR_CLIENT,
+	PCLR_DIALOG,
+	PCLR_HIGHLIGHT,
+	PCLR_LOWLIGHT,
+	PCLR_SHADOW,
+	PegColor,
+	PegPoint,
+	PegRect,
+	PSF_ACCEPTS_FOCUS,
+	PSF_CURRENT,
+	PSF_MOVEABLE,
+	PSF_NONCLIENT,
+	PSF_SIZEABLE,
+	PSF_TAB_STOP,
+	PSF_VIEWPORT,
+	PSF_VISIBLE,
+	TYPE_WINDOW,
+	type PegBitmap,
+	type SIGNED,
+} from "./pegtypes";
 import { PPT_NORMAL } from "./pscreen";
 import type { PegMessage } from "./pmessage";
 
 // Move Types. A re-size is treated by Peg as simply a different type of move.
-const PMM_MOVEALL =         0x80
-const PMM_MOVETOP =         0x01
-const PMM_MOVEBOTTOM =      0x02
-const PMM_MOVELEFT =        0x04 
-const PMM_MOVERIGHT =       0x08
-const PMM_MOVEUR =          0x09
-const PMM_MOVELR =          0x0a
-const PMM_MOVEUL =          0x05
-const PMM_MOVELL =          0x06
+const PMM_MOVEALL = 0x80;
+const PMM_MOVETOP = 0x01;
+const PMM_MOVEBOTTOM = 0x02;
+const PMM_MOVELEFT = 0x04;
+const PMM_MOVERIGHT = 0x08;
+const PMM_MOVEUR = 0x09;
+const PMM_MOVELR = 0x0a;
+const PMM_MOVEUL = 0x05;
+const PMM_MOVELL = 0x06;
 
-const PEG_FRAME_WIDTH = 5
-const PEG_SCROLL_WIDTH = 16
+const PEG_FRAME_WIDTH = 5;
+const PEG_SCROLL_WIDTH = 16;
 
 export interface PegScrollInfo {
-    wMin: SIGNED
-    wMax: SIGNED
-    wCurrent: SIGNED
-    wStep: SIGNED
-    wVisible: SIGNED
+	wMin: SIGNED;
+	wMax: SIGNED;
+	wCurrent: SIGNED;
+	wStep: SIGNED;
+	wVisible: SIGNED;
 }
 
 export class PegWindow extends PegThing {
+	mpIconMap: PegBitmap;
+	mbModal: BOOL;
+	mbMaximized: BOOL;
+	mbMoveFrame: BOOL;
+	muScrollMode: UCHAR;
+	muMoveMode: UCHAR;
+	mbShowPointer: UCHAR;
+	mStartMove: PegPoint;
+	mMovePoint: PegPoint;
+	mRestore: PegRect;
 
-    mpIconMap: PegBitmap
-    mbModal: BOOL
-    mbMaximized: BOOL
-    mbMoveFrame: BOOL
-    muScrollMode: UCHAR
-    muMoveMode: UCHAR
-    mbShowPointer: UCHAR
-    mStartMove: PegPoint
-    mMovePoint: PegPoint
-    mRestore: PegRect
+	constructor(p1: PegRect | WORD, wStyle?: WORD) {
+		if (p1 instanceof PegRect) {
+			super(p1, 0, wStyle || 0);
+		} else {
+			super(0, p1);
 
-    constructor (
-        p1: PegRect | WORD,
-        wStyle?: WORD
-    ) {
-        if (p1 instanceof PegRect) {
-            super(p1, 0, wStyle || 0)
-        } else {
-            super(0, p1)
+			this.mReal = PegRect.Set(0, 0, 20, 20);
+			this.mClient = this.mReal;
+		}
 
-            this.mReal = PegRect.Set(0,0,20,20)
-            this.mClient = this.mReal
-        }
+		this.mpIconMap = null;
+		this.mbModal = false;
+		this.mbMaximized = false;
+		this.mbMoveFrame = false;
+		this.muScrollMode = 0;
+		this.muMoveMode = 0;
+		this.mbShowPointer = PPT_NORMAL;
 
-        this.mpIconMap = null
-        this.mbModal = false
-        this.mbMaximized = false
-        this.mbMoveFrame = false
-        this.muScrollMode = 0
-        this.muMoveMode = 0
-        this.mbShowPointer = PPT_NORMAL
+		this.Type(TYPE_WINDOW);
+		this.muColors[PCI_NORMAL] = PCLR_CLIENT;
+		this.AddStatus(PSF_VIEWPORT | PSF_TAB_STOP);
 
-        this.Type(TYPE_WINDOW)
-        this.muColors[PCI_NORMAL] = PCLR_CLIENT
-        this.AddStatus(PSF_VIEWPORT|PSF_TAB_STOP)
+		if (wStyle & FF_THICK) {
+			this.AddStatus(PSF_SIZEABLE | PSF_MOVEABLE);
+		}
+		this.InitClient();
+	}
 
-        if (wStyle & FF_THICK) {
-            this.AddStatus(PSF_SIZEABLE|PSF_MOVEABLE)
-        }
-        this.InitClient()
-    }
-    
-    Execute(): SIGNED {
-        console.debug("PegWindow::Execute")
+	Message(mesg: PegMessage): number {
+		return super.Message(mesg);
+	}
 
-        let pSend: PegMessage
+	Execute(): Promise<SIGNED> {
+		console.debug("PegWindow::Execute");
+		let pSend: PegMessage;
+		let iReturn = 0;
 
-        if (!this.StatusIs(PSF_VISIBLE)) {
-            this.Presentation().Add(this)
-        }
+		return new Promise(async (resolve, reject) => {
+			if (!this.StatusIs(PSF_VISIBLE)) {
+				this.Presentation().Add(this);
+			}
 
-        while (true) {
-            this.MessageQueue().Pop(pSend)
+			while (true) {
+				await this.MessageQueue().Pop(pSend);
 
-            switch (pSend.wType) {
-                // TODO
-                default:
-                    let iReturn = this.Presentation().DispatchMessage(this, pSend)
-                    if (iReturn) {
-                        return iReturn
-                    }
-            }
-        }
+				switch (pSend.wType) {
+					// TODO
+					default:
+						iReturn = this.Presentation().DispatchMessage(this, pSend);
+						if (iReturn) {
+							break;
+							// return iReturn;
+						}
+				}
+			}
 
-        return 0
-    }
+			resolve(0);
+		});
+	}
 
-    DrawFrame(bFill: BOOL = true) {
-        let color: PegColor = new PegColor(PCLR_BORDER, this.muColors[PCI_NORMAL], CF_FILL)
+	DrawFrame(bFill: BOOL = true) {
+		let color: PegColor = new PegColor(
+			PCLR_BORDER,
+			this.muColors[PCI_NORMAL],
+			CF_FILL
+		);
 
-        let dColors: DWORD = this.Screen().NumColors()
+		let dColors: DWORD = this.Screen().NumColors();
 
-        if (dColors < 4) {
-            color.uForeground = PCLR_SHADOW
-        }
+		if (dColors < 4) {
+			color.uForeground = PCLR_SHADOW;
+		}
 
-        if (bFill) {
-            switch(this.mwStyle & FF_MASK) {
-                case FF_THICK:
-                    this.Rectangle(this.mReal, color, PEG_FRAME_WIDTH)
-                    break
-                case FF_RAISED:
-                case FF_RECESSED:
-                    if (dColors >= 4) {
-                        this.Rectangle(this.mReal, color, 0)
-                        break
-                    }
-                case FF_THIN:
-                    color.uForeground = PCLR_SHADOW
-                    this.Rectangle(this.mReal, color, 1)
-                    break
-                
-                case FF_NONE:
-                default:
-                    this.Rectangle(this.mReal, color, 0)
-            }
-        }
+		if (bFill) {
+			switch (this.mwStyle & FF_MASK) {
+				case FF_THICK:
+					this.Rectangle(this.mReal, color, PEG_FRAME_WIDTH);
+					break;
+				case FF_RAISED:
+				case FF_RECESSED:
+					if (dColors >= 4) {
+						this.Rectangle(this.mReal, color, 0);
+						break;
+					}
+				case FF_THIN:
+					color.uForeground = PCLR_SHADOW;
+					this.Rectangle(this.mReal, color, 1);
+					break;
 
-        if (
-            (dColors >= 4 && (this.mwStyle&(FF_THICK|FF_RAISED))) ||
-            (dColors < 4 && (this.mwStyle && FF_THICK))
-        ) {
-            color.uForeground = PCLR_HIGHLIGHT
+				case FF_NONE:
+				default:
+					this.Rectangle(this.mReal, color, 0);
+			}
+		}
 
-            // add highlights
-            this.Line(this.mReal.wLeft + 1, this.mReal.wTop + 1, this.mReal.wLeft +1, this.mReal.wBottom, color)
-            this.Line(this.mReal.wLeft + 2, this.mReal.wTop + 1, this.mReal.wRight -1, this.mReal.wTop +1, color)
+		if (
+			(dColors >= 4 && this.mwStyle & (FF_THICK | FF_RAISED)) ||
+			(dColors < 4 && this.mwStyle && FF_THICK)
+		) {
+			color.uForeground = PCLR_HIGHLIGHT;
 
-            color.uForeground = PCLR_LOWLIGHT
+			// add highlights
+			this.Line(
+				this.mReal.wLeft + 1,
+				this.mReal.wTop + 1,
+				this.mReal.wLeft + 1,
+				this.mReal.wBottom,
+				color
+			);
+			this.Line(
+				this.mReal.wLeft + 2,
+				this.mReal.wTop + 1,
+				this.mReal.wRight - 1,
+				this.mReal.wTop + 1,
+				color
+			);
 
-            // add edge
-            this.Line(this.mReal.wRight - 1, this.mReal.wTop + 1, this.mReal.wRight - 1, this.mReal.wBottom - 1, color)
-            this.Line(this.mReal.wLeft + 1, this.mReal.wBottom - 1, this.mReal.wRight - 1, this.mReal.wBottom - 1, color);
+			color.uForeground = PCLR_LOWLIGHT;
 
-            // add shadow
-            color.uForeground = PCLR_SHADOW
+			// add edge
+			this.Line(
+				this.mReal.wRight - 1,
+				this.mReal.wTop + 1,
+				this.mReal.wRight - 1,
+				this.mReal.wBottom - 1,
+				color
+			);
+			this.Line(
+				this.mReal.wLeft + 1,
+				this.mReal.wBottom - 1,
+				this.mReal.wRight - 1,
+				this.mReal.wBottom - 1,
+				color
+			);
 
-            this.Line(this.mReal.wRight, this.mReal.wTop, this.mReal.wRight, this.mReal.wBottom, color);
-            this.Line(this.mReal.wLeft, this.mReal.wBottom, this.mReal.wRight, this.mReal.wBottom, color);
-        }
+			// add shadow
+			color.uForeground = PCLR_SHADOW;
 
-        if (this.Screen().NumColors() >= 4) {
-            if (this.mwStyle & FF_RECESSED) {
-                color.uForeground = PCLR_HIGHLIGHT
+			this.Line(
+				this.mReal.wRight,
+				this.mReal.wTop,
+				this.mReal.wRight,
+				this.mReal.wBottom,
+				color
+			);
+			this.Line(
+				this.mReal.wLeft,
+				this.mReal.wBottom,
+				this.mReal.wRight,
+				this.mReal.wBottom,
+				color
+			);
+		}
 
-                // add highlights
-                this.Line(this.mReal.wLeft, this.mReal.wBottom, this.mReal.wRight, this.mReal.wBottom, color)
-                this.Line(this.mReal.wRight, this.mReal.wTop, this.mReal.wRight, this.mReal.wBottom, color)
+		if (this.Screen().NumColors() >= 4) {
+			if (this.mwStyle & FF_RECESSED) {
+				color.uForeground = PCLR_HIGHLIGHT;
 
-                color.uForeground = PCLR_LOWLIGHT
+				// add highlights
+				this.Line(
+					this.mReal.wLeft,
+					this.mReal.wBottom,
+					this.mReal.wRight,
+					this.mReal.wBottom,
+					color
+				);
+				this.Line(
+					this.mReal.wRight,
+					this.mReal.wTop,
+					this.mReal.wRight,
+					this.mReal.wBottom,
+					color
+				);
 
-                // add edge
-                this.Line(this.mReal.wLeft, this.mReal.wTop, this.mReal.wRight, this.mReal.wTop, color)
-                this.Line(this.mReal.wLeft, this.mReal.wTop + 1, this.mReal.wLeft, this.mReal.wBottom, color)
+				color.uForeground = PCLR_LOWLIGHT;
 
-                color.uForeground = PCLR_SHADOW
+				// add edge
+				this.Line(
+					this.mReal.wLeft,
+					this.mReal.wTop,
+					this.mReal.wRight,
+					this.mReal.wTop,
+					color
+				);
+				this.Line(
+					this.mReal.wLeft,
+					this.mReal.wTop + 1,
+					this.mReal.wLeft,
+					this.mReal.wBottom,
+					color
+				);
 
-                // add edge
-                this.Line(this.mReal.wLeft + 1, this.mReal.wTop + 1, this.mReal.wRight - 2, this.mReal.wTop + 1, color);
-                this.Line(this.mReal.wLeft + 1, this.mReal.wTop + 1, this.mReal.wLeft + 1, this.mReal.wBottom - 1, color);
+				color.uForeground = PCLR_SHADOW;
 
-                // add shadows
-                color.uForeground = PCLR_DIALOG
+				// add edge
+				this.Line(
+					this.mReal.wLeft + 1,
+					this.mReal.wTop + 1,
+					this.mReal.wRight - 2,
+					this.mReal.wTop + 1,
+					color
+				);
+				this.Line(
+					this.mReal.wLeft + 1,
+					this.mReal.wTop + 1,
+					this.mReal.wLeft + 1,
+					this.mReal.wBottom - 1,
+					color
+				);
 
-                this.Line(this.mReal.wLeft + 1, this.mReal.wBottom - 1, this.mReal.wRight - 1, this.mReal.wBottom - 1, color)
-                this.Line(this.mReal.wRight - 1, this.mReal.wTop + 1, this.mReal.wRight - 1, this.mReal.wBottom - 1, color)
-            }
-        }
+				// add shadows
+				color.uForeground = PCLR_DIALOG;
 
-        if (this.mwStyle & FF_THICK) {
-            color.uForeground = PCLR_HIGHLIGHT
+				this.Line(
+					this.mReal.wLeft + 1,
+					this.mReal.wBottom - 1,
+					this.mReal.wRight - 1,
+					this.mReal.wBottom - 1,
+					color
+				);
+				this.Line(
+					this.mReal.wRight - 1,
+					this.mReal.wTop + 1,
+					this.mReal.wRight - 1,
+					this.mReal.wBottom - 1,
+					color
+				);
+			}
+		}
 
-            this.Line(this.mReal.wRight - PEG_FRAME_WIDTH + 2,
-                this.mReal.wTop + PEG_FRAME_WIDTH - 1,
-                this.mReal.wRight - PEG_FRAME_WIDTH + 2,
-                this.mReal.wBottom - PEG_FRAME_WIDTH + 2, color);
-           
-            this.Line(this.mReal.wLeft + PEG_FRAME_WIDTH - 1,
-                this.mReal.wBottom - PEG_FRAME_WIDTH + 2,
-                this.mReal.wRight - PEG_FRAME_WIDTH + 2,
-                this.mReal.wBottom - PEG_FRAME_WIDTH + 2, color);
-   
-            color.uForeground = PCLR_LOWLIGHT;
+		if (this.mwStyle & FF_THICK) {
+			color.uForeground = PCLR_HIGHLIGHT;
 
-            this.Line(this.mReal.wLeft + PEG_FRAME_WIDTH - 1, this.mClient.wTop - 1, this.mReal.wRight - PEG_FRAME_WIDTH, this.mClient.wTop - 1, color);
-   
-            this.Line(this.mClient.wLeft - 1, this.mClient.wTop, this.mClient.wLeft - 1, this.mReal.wBottom - PEG_FRAME_WIDTH + 1, color);
-        }
-    }
+			this.Line(
+				this.mReal.wRight - PEG_FRAME_WIDTH + 2,
+				this.mReal.wTop + PEG_FRAME_WIDTH - 1,
+				this.mReal.wRight - PEG_FRAME_WIDTH + 2,
+				this.mReal.wBottom - PEG_FRAME_WIDTH + 2,
+				color
+			);
 
-    Add(what: PegThing, bDraw?: boolean): void {
-        let bSetFocus: BOOL = true
+			this.Line(
+				this.mReal.wLeft + PEG_FRAME_WIDTH - 1,
+				this.mReal.wBottom - PEG_FRAME_WIDTH + 2,
+				this.mReal.wRight - PEG_FRAME_WIDTH + 2,
+				this.mReal.wBottom - PEG_FRAME_WIDTH + 2,
+				color
+			);
 
-        if (what.StatusIs(PSF_VISIBLE)) {
-            bSetFocus = false
-        }
+			color.uForeground = PCLR_LOWLIGHT;
 
-        if (what != this.First()) {
-            super.Add(what, bDraw)
+			this.Line(
+				this.mReal.wLeft + PEG_FRAME_WIDTH - 1,
+				this.mClient.wTop - 1,
+				this.mReal.wRight - PEG_FRAME_WIDTH,
+				this.mClient.wTop - 1,
+				color
+			);
 
-            if (bSetFocus) {
-                if (this.StatusIs(PSF_VISIBLE) && this.StatusIs(PSF_CURRENT) && what.StatusIs(PSF_ACCEPTS_FOCUS) && !what.StatusIs(PSF_NONCLIENT)) {
-                    this.Presentation().MoveFocusTree(what)
-                }
-            }
-        }
-    }
+			this.Line(
+				this.mClient.wLeft - 1,
+				this.mClient.wTop,
+				this.mClient.wLeft - 1,
+				this.mReal.wBottom - PEG_FRAME_WIDTH + 1,
+				color
+			);
+		}
+	}
 
-    Draw() {
-        console.log("PegWindow::Draw")
-        this.BeginDraw()
-        this.DrawFrame()
-        this.DrawChildren()
+	Add(what: PegThing, bDraw?: boolean): void {
+		let bSetFocus: BOOL = true;
 
-        this.EndDraw()
-    }
+		if (what.StatusIs(PSF_VISIBLE)) {
+			bSetFocus = false;
+		}
+
+		if (what != this.First()) {
+			super.Add(what, bDraw);
+
+			if (bSetFocus) {
+				if (
+					this.StatusIs(PSF_VISIBLE) &&
+					this.StatusIs(PSF_CURRENT) &&
+					what.StatusIs(PSF_ACCEPTS_FOCUS) &&
+					!what.StatusIs(PSF_NONCLIENT)
+				) {
+					this.Presentation().MoveFocusTree(what);
+				}
+			}
+		}
+	}
+
+	Draw() {
+		console.log("PegWindow::Draw");
+		this.BeginDraw();
+		this.DrawFrame();
+		this.DrawChildren();
+
+		this.EndDraw();
+	}
 }

@@ -1,14 +1,35 @@
 <script lang="ts">
 	import Canvas from "./lib/Canvas.svelte";
 	import ClassPad from "./lib/ClassPad.svelte";
-	import { clearScreen, Debug_Printf, doDrawPixels, drawAllDebug, exampleDisplay, LCD_ClearScreen, LCD_Refresh, Debug_SelectMode1 } from "./lib/drawing";
+	import {
+		clearScreen,
+		Debug_Printf,
+		doDrawPixels,
+		drawAllDebug,
+		exampleDisplay,
+		LCD_ClearScreen,
+		LCD_Refresh,
+		Debug_SelectMode1,
+	} from "./lib/drawing";
 	import { keyEventHandler } from "./lib/helpers";
-	import { onMount } from "svelte";
-  	import { WinMain } from "./lib/ui/basic";
-	import { test_custom_fonts, test_custom_textures, test_virtual_keyboard } from "./lib/textures/test";
+	import { onDestroy, onMount } from "svelte";
+	import { WinMain } from "./lib/ui/basic";
+	import {
+		test_custom_fonts,
+		test_custom_textures,
+		test_virtual_keyboard,
+	} from "./lib/textures/test";
+	import { animationFrameLoop } from "./specs";
+	import { get } from "svelte/store";
 
 	onMount(() => {
 		clearScreen();
+	});
+
+	onDestroy(() => {
+		if ($animationFrameLoop) {
+			cancelAnimationFrame($animationFrameLoop);
+		}
 	});
 
 	function handleKey(ev) {
@@ -17,7 +38,7 @@
 		// translate the key to KEY_*
 		let key = null;
 		// check 0-9
-		if (ev.key >= '0' && ev.key <= '9') {
+		if (ev.key >= "0" && ev.key <= "9") {
 			key = "KEYCODE_" + ev.key;
 		}
 		// Arrow keys
@@ -71,7 +92,7 @@
 			case "=":
 				key = "KEYCODE_EQUALS";
 				break;
-				// wasd
+			// wasd
 			case "w":
 				key = "KEYCODE_UP";
 				break;
@@ -89,6 +110,7 @@
 		keyEventHandler(key);
 	}
 </script>
+
 <svelte:window on:keydown={handleKey} />
 <main>
 	<div class="card">
@@ -115,8 +137,8 @@
 
 		<div class="debug">
 			<pre>
-				<span id="db-ms-x"></span>
-				<span id="db-ms-y"></span>
+				<span id="db-ms-x" />
+				<span id="db-ms-y" />
 			</pre>
 		</div>
 	</div>

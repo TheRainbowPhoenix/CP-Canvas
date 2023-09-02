@@ -2,8 +2,8 @@ import { getContext, onMount, onDestroy } from "svelte";
 import { writable, derived, readable } from "svelte/store";
 
 // TODO: the classpad is responsive, change it to writable
-export const WIDTH = 320
-export const HEIGHT = 528
+export const WIDTH = 320;
+export const HEIGHT = 528;
 
 export const width = readable(WIDTH);
 export const height = readable(HEIGHT);
@@ -17,24 +17,40 @@ export const time = writable(0);
 // classpad is a store that contains the state of the classpad
 // contains cpu, lcd, keyboard, etc
 export const classpad = writable({
-	cpu: { // might be useful to have a cpu store by itself
-		r0: 0, r1: 0, r2: 0, r3: 0,
-		r4: 0, r5: 0, r6: 0, r7: 0,
-		r8: 0, r9: 0, r10: 0, r11: 0,
-		r12: 0, r13: 0, r14: 0, r15: 0,
-		gbr: 0, pr: 0, ach: 0, acl: 0
+	cpu: {
+		// might be useful to have a cpu store by itself
+		r0: 0,
+		r1: 0,
+		r2: 0,
+		r3: 0,
+		r4: 0,
+		r5: 0,
+		r6: 0,
+		r7: 0,
+		r8: 0,
+		r9: 0,
+		r10: 0,
+		r11: 0,
+		r12: 0,
+		r13: 0,
+		r14: 0,
+		r15: 0,
+		gbr: 0,
+		pr: 0,
+		ach: 0,
+		acl: 0,
 	},
 	debug: {
 		x: 0,
 		y: 0,
 	},
 	debugMenu: {
-		isThreeBitColour : false,
+		isThreeBitColour: false,
 	},
-	waitingForKeypress: false,		
+	waitingForKeypress: false,
 	waitingForAnyInput: false,
 	currentInputs: [], // array of InputEvents,
-	inputCallback: null // String of the callback function
+	inputCallback: null, // String of the callback function
 });
 
 // VRAM Dedicated Store
@@ -50,6 +66,7 @@ export const vramBackup = writable(new Uint16Array(WIDTH * HEIGHT));
 export const fontCache = writable([]);
 export const textureCache = writable([]);
 
+export const animationFrameLoop = writable(null);
 
 // A more convenient store for grabbing all game props
 export const props = deriveObject({
