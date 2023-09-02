@@ -264,6 +264,13 @@ export function peg_test(data) {
 	pScreen.Invalidate(pPresentation.mReal);
 	pPresentation.Invalidate(pPresentation.mReal);
 
+	setTimeout(() => {
+		console.log("!!! pPresentation !!!");
+		//@ts-ignore
+		window.drawTree(pPresentation);
+		console.log("!!! pPresentation !!!");
+	}, 1000);
+
 	// just exit test ...
 	setTimeout(() => {
 		console.log("sending exit msg...");

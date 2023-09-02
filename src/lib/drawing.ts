@@ -15,22 +15,41 @@ import {
  * TODO !!
  */
 
-export type RGBColor = [number, number, number]
+export type RGBColor = [number, number, number];
 
-export function INT_RGB888TO565(
-	r: number,
-	g: number,
-	b: number
-): number {
-	// return 16 bit color
-	return (
-		((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3)
-	);
+export function hexToRgb(hex: string): RGBColor {
+	// Remove the hash character if present
+	hex = hex.replace(/^#/, "");
+
+	// Define regular expressions to match different formats
+	const shortHexRegex = /^([a-f\d])([a-f\d])([a-f\d])$/i;
+	const longHexRegex = /^([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i;
+
+	// Check for different formats and extract values
+	let result: RegExpExecArray | null = null;
+	if (hex.length === 3) {
+		result = shortHexRegex.exec(hex);
+		if (result) {
+			const [, r, g, b] = result;
+			return [parseInt(r, 16) * 17, parseInt(g, 16) * 17, parseInt(b, 16) * 17];
+		}
+	} else if (hex.length === 6) {
+		result = longHexRegex.exec(hex);
+		if (result) {
+			const [, r, g, b] = result;
+			return [parseInt(r, 16), parseInt(g, 16), parseInt(b, 16)];
+		}
+	}
+
+	return null; // Invalid format
 }
 
-export function INT_RGB565TO888(
-	color: number
-): RGBColor {
+export function INT_RGB888TO565(r: number, g: number, b: number): number {
+	// return 16 bit color
+	return ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3);
+}
+
+export function INT_RGB565TO888(color: number): RGBColor {
 	return [
 		((color >> 11) & 0x1f) << 3,
 		((color >> 5) & 0x3f) << 2,
@@ -62,10 +81,7 @@ export function LCD_Refresh() {
 	console.log("LCD_Refresh took", (timeEnd - timeStart).toFixed(2), "ms");
 }
 
-export function Debug_SetCursorPosition(
-	x: number,
-	y: number
-) {
+export function Debug_SetCursorPosition(x: number, y: number) {
 	// get classpad store
 	const classpadStore = get(classpad);
 	// set cursor position
@@ -78,12 +94,10 @@ export function Debug_SetCursorPosition(
 
 /**
  * Convert an html hex color to RGB
- * @param color "#fff" or "#ffffff" hex color 
+ * @param color "#fff" or "#ffffff" hex color
  * @returns RGBColor : [r, g, b]
  */
-export function INT_HEXTORGB(
-	color: string
-): RGBColor {
+export function INT_HEXTORGB(color: string): RGBColor {
 	// check if # is present
 	if (color[0] === "#") {
 		// remove #
@@ -103,8 +117,8 @@ export function INT_HEXTORGB(
 
 /**
  * Draws a rectange to VRAM
- * @param x 
- * @param y 
+ * @param x
+ * @param y
  * @param w Width
  * @param h Height
  * @param color RGB fill color to rectagle
@@ -125,25 +139,23 @@ export function rectangle(
 		for (let _y = y; _y < y + h; _y += 1) {
 			setPixel(_x, _y, color);
 		}
-	}	
+	}
 }
 
 /**
- * 
- * @param x 
- * @param y1 
- * @param y2 
- * @param color 
+ *
+ * @param x
+ * @param y1
+ * @param y2
+ * @param color
  */
-export function vline(
-	x: number,
-	y1: number,
-	y2: number,
-	color: RGBColor
-) {
-	if (y1>y2) { let z=y2; y2=y1; y1=z;}
-	for (let y=y1; y<=y2; y++)
-		setPixel(x, y, color);
+export function vline(x: number, y1: number, y2: number, color: RGBColor) {
+	if (y1 > y2) {
+		let z = y2;
+		y2 = y1;
+		y1 = z;
+	}
+	for (let y = y1; y <= y2; y++) setPixel(x, y, color);
 }
 
 export function line(
@@ -175,7 +187,7 @@ export function line(
 		while (x1 != x2) {
 			x1 += ix;
 			error += dy;
-			if (error >= (dx >> 1)) {
+			if (error >= dx >> 1) {
 				y1 += iy;
 				error -= dx;
 			}
@@ -186,7 +198,7 @@ export function line(
 		while (y1 != y2) {
 			y1 += iy;
 			error += dx;
-			if (error >= (dy >> 1)) {
+			if (error >= dy >> 1) {
 				x1 += ix;
 				error -= dy;
 			}
@@ -206,68 +218,94 @@ export function triangle(
 	colorLine: RGBColor
 ) {
 	let z;
-	if(x0>x2){ z=x2; x2=x0; x0=z; z=y2; y2=y0; y0=z; }
-	if(x1>x2){ z=x2; x2=x1; x1=z; z=y2; y2=y1; y1=z; }
-	if(x0>x1){ z=x1; x1=x0; x0=z; z=y1; y1=y0; y0=z; }
+	if (x0 > x2) {
+		z = x2;
+		x2 = x0;
+		x0 = z;
+		z = y2;
+		y2 = y0;
+		y0 = z;
+	}
+	if (x1 > x2) {
+		z = x2;
+		x2 = x1;
+		x1 = z;
+		z = y2;
+		y2 = y1;
+		y1 = z;
+	}
+	if (x0 > x1) {
+		z = x1;
+		x1 = x0;
+		x0 = z;
+		z = y1;
+		y1 = y0;
+		y0 = z;
+	}
 
 	let x = x0; //x is the variable that counts from left to right
 
 	//Values for line a
 	let ay = y0; //The point y for the current x on the line a
 	let aiy; //The direction of line a
-	let adx = (x2>x0 ? (       x2-x0) : (        x0-x2) );
-	let ady = (y2>y0 ? (aiy=1, y2-y0) : (aiy=-1, y0-y2) );
+	let adx = x2 > x0 ? x2 - x0 : x0 - x2;
+	let ady = y2 > y0 ? ((aiy = 1), y2 - y0) : ((aiy = -1), y0 - y2);
 	let aerr = 0; //The y value of a (fractional part). y is actually ay+(aerr/adx)
 
 	//Values for line b
 	let by = y0; //The point y for the current x on the line b
 	let biy; //The direction of line b
-	let bdx = (x1>x0 ? (       x1-x0) : (        x0-x1) );
-	let bdy = (y1>y0 ? (biy=1, y1-y0) : (biy=-1, y0-y1) );
+	let bdx = x1 > x0 ? x1 - x0 : x0 - x1;
+	let bdy = y1 > y0 ? ((biy = 1), y1 - y0) : ((biy = -1), y0 - y1);
 	let berr = 0;
 
 	//Values for line c
 	let cy = y1; //The point y for the current x on the line y (starting at P1)
 	let ciy; //The direction of line c
-	let cdx = (x2>x1 ? (       x2-x1) : (        x1-x2) );
-	let cdy = (y2>y1 ? (ciy=1, y2-y1) : (ciy=-1, y1-y2) );
+	let cdx = x2 > x1 ? x2 - x1 : x1 - x2;
+	let cdy = y2 > y1 ? ((ciy = 1), y2 - y1) : ((ciy = -1), y1 - y2);
 	let cerr = 0;
 
 	//First draw area between a and b
-	while (x<x1){
+	while (x < x1) {
 		x++;
-		aerr+=ady;
-		while(aerr>=adx >> 2){ //if aerr/adx >= 0.5
-			aerr-=adx;
-			ay+=aiy;
+		aerr += ady;
+		while (aerr >= adx >> 2) {
+			//if aerr/adx >= 0.5
+			aerr -= adx;
+			ay += aiy;
 		}
-		berr+=bdy;
-		while(berr>=bdx >> 2){ //if berr/bdx >= 0.5
-			berr-=bdx;
-			by+=biy;
+		berr += bdy;
+		while (berr >= bdx >> 2) {
+			//if berr/bdx >= 0.5
+			berr -= bdx;
+			by += biy;
 		}
-		vline(x,ay,by,colorFill);
+		vline(x, ay, by, colorFill);
 	}
 
 	//Then draw area between a and c
-	while (x<x2-1){ //we don't need x=x2, bacause x should already have the right vaue... 
+	while (x < x2 - 1) {
+		//we don't need x=x2, bacause x should already have the right vaue...
 		x++;
-		aerr+=ady;
-		while(aerr>=adx >> 2){ //if aerr/adx >= 0.5
-			aerr-=adx;
-			ay+=aiy;
+		aerr += ady;
+		while (aerr >= adx >> 2) {
+			//if aerr/adx >= 0.5
+			aerr -= adx;
+			ay += aiy;
 		}
-		cerr+=cdy;
-		while(cerr>=cdx >> 2){ //if berr/bdx >= 0.5
-			cerr-=cdx;
-			cy+=ciy;
+		cerr += cdy;
+		while (cerr >= cdx >> 2) {
+			//if berr/bdx >= 0.5
+			cerr -= cdx;
+			cy += ciy;
 		}
-		vline(x,ay,cy,colorFill);
+		vline(x, ay, cy, colorFill);
 	}
 
-	line(x0,y0,x1,y1,colorLine);
-	line(x1,y1,x2,y2,colorLine);
-	line(x2,y2,x0,y0,colorLine);
+	line(x0, y0, x1, y1, colorLine);
+	line(x1, y1, x2, y2, colorLine);
+	line(x2, y2, x0, y0, colorLine);
 }
 
 export function fillScreen(color: RGBColor) {
@@ -278,19 +316,15 @@ export function fillScreen(color: RGBColor) {
 
 /**
  * Set a pixel in VRAM
- * @param x 
- * @param y 
- * @param color 
+ * @param x
+ * @param y
+ * @param color
  */
-export function setPixel(
-	x: number,
-	y: number,
-	color: RGBColor
-) {
+export function setPixel(x: number, y: number, color: RGBColor) {
 	// get vram
 	const VRAM = get(vram);
 	// vram is a 320x528 array of 3 bytes
-	let i = (x + y * WIDTH);
+	let i = x + y * WIDTH;
 	VRAM[i] = INT_RGB888TO565(color[0], color[1], color[2]);
 }
 
@@ -300,7 +334,7 @@ export function LCD_ClearScreen() {
 	// vram is a 320x528 array of 16bit colors
 	for (let i = 0; i < WIDTH * HEIGHT; i++) {
 		// set to white
-		VRAM[i] = 0xFFFF;
+		VRAM[i] = 0xffff;
 	}
 	console.log("LCD_ClearScreen");
 }
@@ -405,8 +439,8 @@ export function Debug_PrintString(
 
 /**
  * Print a string on screen
- * @param x 
- * @param y 
+ * @param x
+ * @param y
  * @param invert Invert background (black text on white bg)
  * @param text String to draw
  */
@@ -435,40 +469,36 @@ export function drawAllDebug() {
  * Color function for easier copy/paste from c code
  * Returns RGB888 color
  */
-export function color(
-	r: number,
-	g: number,
-	b: number
-) : RGBColor {
+export function color(r: number, g: number, b: number): RGBColor {
 	return [r, g, b];
 }
 /**
  * SDK demo
  */
 export function exampleDisplay() {
-	fillScreen(color(0,0,64));
-	
+	fillScreen(color(0, 0, 64));
+
 	//Example for Debug_Printf(x,y,invert_color,0,format_string) //(small text)
 	Debug_Printf(10, 1, false, "Test");
 
 	//Example for Debug_PrintString(string, invert_color) //(big text)
-	Debug_SetCursorPosition(16,1);
+	Debug_SetCursorPosition(16, 1);
 	Debug_PrintString("HelloWorld", true);
 
-	//use this command to actually update the screen 
+	//use this command to actually update the screen
 	LCD_Refresh();
 
 	//Example for setPixel(x,y,color)
-	for (let x=0; x<256;x++){
-		for (let y=0; y<256; y++){
-			setPixel(50+x,250+y, color(x,y,0) );
+	for (let x = 0; x < 256; x++) {
+		for (let y = 0; y < 256; y++) {
+			setPixel(50 + x, 250 + y, color(x, y, 0));
 		}
 	}
 	// get debug state
-	triangle(10,20,40,250,300,100,color(0,255,0),color(0,0,255));
-	
+	triangle(10, 20, 40, 250, 300, 100, color(0, 255, 0), color(0, 0, 255));
+
 	//Example for line(x1,y1,x2,y2,color);
-	line(100,30,290,500,color(255,0,0));      //Use RGB color
+	line(100, 30, 290, 500, color(255, 0, 0)); //Use RGB color
 	LCD_Refresh();
 }
 
@@ -482,7 +512,7 @@ const Service_ID = "DEV12345"; // 8 chars, can be have upper/lower case or numbe
 export function Debug_SelectMode1() {
 	LCD_ClearScreen();
 	Debug_SetCursorPosition(0, 0);
-	Debug_PrintString("====<< SELECT  MODE >>====", true)
+	Debug_PrintString("====<< SELECT  MODE >>====", true);
 	Debug_SetCursorPosition(1, 2);
 	Debug_PrintString("1.TEST MENU", true);
 	Debug_SetCursorPosition(1, 4);
@@ -506,7 +536,7 @@ export function Debug_SelectMode1() {
 	Debug_PrintString("ROM_Ver ", true);
 	// gets ROM version - simulated here
 	Debug_PrintString(ROM_Ver, true);
-	
+
 	LCD_Refresh();
 	// set classpad state
 	let classpadState = get(classpad);
@@ -523,12 +553,12 @@ function Debug_TestMenu() {
 	Debug_SetCursorPosition(2, 0x11); // 17
 	Debug_PrintString("ROM_Ver ", true);
 	Debug_PrintString(ROM_Ver, true);
-	
-	Debug_SetCursorPosition(2, 0xF);
+
+	Debug_SetCursorPosition(2, 0xf);
 	// Debug_PrintString("CALIBRATION  XX", true);
 	Debug_PrintString("CALIBRATION  --", true); // seems to be -- when tested on both modded and unmodded firmware
 	// some check for "OK", "NG" or "--" on the last 2 characters of calibration
-	
+
 	Debug_TestMenu_Inner();
 
 	AwaitKeyPress(debugTestMenuKeyHandler);
@@ -551,15 +581,16 @@ function Debug_TestMenu_Inner() {
 		"10.OFF CURRENT",
 		"11.SEND-RECEIVE",
 		"12.RECEIVE-SEND",
-		"0.END(RESET)"
+		"0.END(RESET)",
 	];
 	let menuIndex = get(classpad).cpu.r0;
 	// console.log("menuIndex", menuIndex);
 	// in reality, this is slighly more complicated but more optimized, but this is fine
 	for (let i = 0; i < stringsMenu.length; i++) {
-		let joinedString = " " + stringsMenu[i] + " ".repeat(26 - stringsMenu[i].length);
+		let joinedString =
+			" " + stringsMenu[i] + " ".repeat(26 - stringsMenu[i].length);
 		Debug_SetCursorPosition(0, i);
-		Debug_PrintString(joinedString, (i != menuIndex));
+		Debug_PrintString(joinedString, i != menuIndex);
 	}
 
 	LCD_Refresh();
@@ -609,7 +640,7 @@ function Routine_DebugMenu_GetRow(renderFunc, maxIndex) {
 			return [false, 0];
 		}
 		// console.log("debugTestMenuKeyHandler: touch event: row " + row);
-		// if direction is TOUCH_UP, then execute 
+		// if direction is TOUCH_UP, then execute
 		// if direction is TOUCH_DOWN, or TOUCH_DRAG, then just set r0
 		if (input.data.direction == "TOUCH_UP") {
 			exec = true;
@@ -670,8 +701,8 @@ function debugTestMenuKeyHandler() {
 		} else if (row == 13) {
 			console.log("debugTestMenuKeyHandler: end(reset)");
 			// Debug_TestMenu_EndReset();
-		}			
-		// else r0 == 0, but just re-renders the menu, so ignore 
+		}
+		// else r0 == 0, but just re-renders the menu, so ignore
 	}
 }
 
@@ -680,7 +711,7 @@ function debugTestMenuKeyHandler() {
 function Debug_TestMenu_TestFunction() {
 	// another menu
 	LCD_ClearScreen();
-	
+
 	// I'm making this bit a little more concise
 	let stringsMenu = [
 		"## LY777D MANUAL TEST MENU",
@@ -695,18 +726,19 @@ function Debug_TestMenu_TestFunction() {
 		"9.OTHER",
 		"10.SD",
 		"11.CALLIBRATION",
-		"0.QUIT"
+		"0.QUIT",
 	];
 	let menuIndex = get(classpad).cpu.r0;
 	// console.log("menuIndex", menuIndex);
 	// in reality, this is slighly more complicated but more optimized, but this is fine
 	for (let i = 0; i < stringsMenu.length; i++) {
-		let joinedString = " " + stringsMenu[i] + " ".repeat(26 - stringsMenu[i].length);
+		let joinedString =
+			" " + stringsMenu[i] + " ".repeat(26 - stringsMenu[i].length);
 		if (i == 0) {
 			joinedString = stringsMenu[i] + " ";
 		}
 		Debug_SetCursorPosition(0, i);
-		Debug_PrintString(joinedString, (i != menuIndex));
+		Debug_PrintString(joinedString, i != menuIndex);
 	}
 
 	LCD_Refresh();
@@ -785,18 +817,19 @@ function Debug_LCDMenu() {
 		"4.OPH LCD CHECK",
 		"5.LIGHT TEST",
 		"6.TFT AUTO",
-		"0.QUIT"
+		"0.QUIT",
 	];
 	let menuIndex = get(classpad).cpu.r0;
 	// console.log("menuIndex", menuIndex);
 	// in reality, this is slighly more complicated but more optimized, but this is fine
 	for (let i = 0; i < stringsMenu.length; i++) {
-		let joinedString = " " + stringsMenu[i] + " ".repeat(26 - stringsMenu[i].length);
+		let joinedString =
+			" " + stringsMenu[i] + " ".repeat(26 - stringsMenu[i].length);
 		if (i == 0) {
 			joinedString = stringsMenu[i] + " ";
 		}
 		Debug_SetCursorPosition(0, i);
-		Debug_PrintString(joinedString, (i != menuIndex));
+		Debug_PrintString(joinedString, i != menuIndex);
 	}
 
 	LCD_Refresh();
@@ -895,7 +928,7 @@ function Debug_TestMenu_Service() {
 	Debug_PrintString("=====<< Service >>=====", true);
 
 	// create fake device ID
-	Debug_SetCursorPosition(1,2);
+	Debug_SetCursorPosition(1, 2);
 	Debug_PrintString("ID=" + Service_ID, true);
 
 	// exe quit text
@@ -923,7 +956,6 @@ function Debug_TestMenu_VersionAndSum() {
 	Debug_PrintString("ABS   SUM  D141 OK!", true);
 	Debug_SetCursorPosition(1, 9);
 	Debug_PrintString("USER  SUM  4956  --", true);
-
 
 	// exe quit text
 	Debug_SetCursorPosition(7, 15);
@@ -1024,7 +1056,6 @@ function AwaitKeyPress(functionCall: () => void) {
 	classpadState.inputCallback = functionCall;
 	// maybe set the function to call when key is pressed?
 }
-
 
 /**
  * Just a simple draw function

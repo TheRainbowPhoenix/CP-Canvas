@@ -21,6 +21,8 @@
 	} from "./lib/textures/test";
 	import { animationFrameLoop } from "./specs";
 	import { get } from "svelte/store";
+	import SidePanel from "./lib/ide/SidePanel.svelte";
+	import { RemakeUI } from "./lib/ui/remake";
 
 	onMount(() => {
 		clearScreen();
@@ -129,7 +131,8 @@
 			<button on:click={LCD_Refresh}>LCD_Refresh</button>
 			<button on:click={LCD_ClearScreen}>LCD_ClearScreen</button>
 			<button on:click={Debug_SelectMode1}>Debug_SelectMode1</button>
-			<button on:click={WinMain}>Test_UI</button>
+			<button on:click={WinMain}>Test_PEG</button>
+			<button on:click={RemakeUI}>Mock_UI</button>
 			<button on:click={test_custom_fonts}>Test Custom Fonts</button>
 			<button on:click={test_custom_textures}>Test Custom Textures</button>
 			<button on:click={test_virtual_keyboard}>Test Virtual Keyboard</button>
@@ -142,6 +145,7 @@
 			</pre>
 		</div>
 	</div>
+	<SidePanel />
 </main>
 
 <style>
@@ -158,6 +162,6 @@
 	.debug {
 		position: fixed;
 		top: 0;
-		right: 0;
+		right: 270px;
 	}
 </style>

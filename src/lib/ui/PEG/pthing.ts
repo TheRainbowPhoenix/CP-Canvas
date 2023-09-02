@@ -1,12 +1,15 @@
 import { charmap } from "../../../common/font";
 import type { BOOL, LONG, UCHAR, WORD } from "../native/windows";
 import {
+	CF_FILL,
 	FF_MASK,
 	FF_NONE,
 	FF_RAISED,
 	FF_RECESSED,
 	FF_THICK,
 	FF_THIN,
+	PCLR_BORDER,
+	PCLR_SHADOW,
 	PegColor,
 	PegPoint,
 	PegRect,
@@ -50,6 +53,8 @@ export abstract class PegThing {
 	protected mpFirst: PegThing;
 	protected mpNext: PegThing;
 	protected mpPrev: PegThing;
+
+	protected _mpChildrens: PegThing[] = [];
 
 	public mpViewportList: Viewport;
 
@@ -283,7 +288,7 @@ export abstract class PegThing {
 		while (pCurrent) {
 			// #ifdef PEG_AWT_SUPPORT
 			if (this.mReal.Overlap(pCurrent.mClip)) {
-				// pCurrent.Draw()
+				pCurrent.Draw();
 			}
 			//  #else
 			if (this.Screen().InvalidOverlap(pCurrent.mClip)) {
@@ -443,7 +448,21 @@ export abstract class PegThing {
 	}
 
 	SendSignal(uSignal: UCHAR) {}
-	StandardBorder(bFillColor: COLORVAL) {}
+	StandardBorder(bFillColor: COLORVAL) {
+		let color: PegColor = new PegColor(PCLR_BORDER, bFillColor, CF_FILL);
+
+		switch (this.mwStyle & FF_MASK) {
+			case FF_THIN:
+				color.uForeground = PCLR_SHADOW;
+				this.Rectangle(this.mReal, color, 1);
+				break;
+			case FF_NONE:
+				this.Rectangle(this.mReal, color, 1); // 0 but 1 for test
+				break;
+			default:
+				break;
+		}
+	}
 	MessageChildren(mesg: PegMessage) {}
 
 	UpdateChildClipping() {}
