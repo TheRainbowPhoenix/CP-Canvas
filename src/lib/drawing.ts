@@ -208,6 +208,16 @@ export function line(
 	}
 }
 
+
+function measureTextWidth(text: string): number {
+	let width = 0;
+	for (let l of text) {
+		let char = ui_char_map[l] || ui_char_stubLetter;
+		width += char.size[0] + 1;
+	}
+	return width;
+}
+
 // prettier-ignore
 export function textWrap(
 	x: number,
@@ -225,49 +235,97 @@ export function textWrap(
 		colorShadow = hexToRgb("#E7E3E7");
 	}
 
-	const fh = 18;
+	console.log(width, height)
+
+	const fh = 18; // font height
 	let _x = 0;
 	let _y = 0;
 	let cur_x = 0;
 	let cur_y = 0;
 
-	for (let l of text) {
-		_x = -1;
-		_y = 0;
+	let lines = text.split('\n')
 
+	for (const line of lines) {
+		let line_w = measureTextWidth(line);
+		// when text overflows the dialog width
+		if (line_w > width) {
+			let words = line.split(' ');
+			let currentLine = "";
+			let currentLineWidth = 0;
+	
+			// Measure the width of each word and assemble the lines
+			for (const word of words) {
+				let wordWidth = measureTextWidth(word + " "); // including space
+				if (currentLineWidth + wordWidth > width) {
+					// If adding the next word exceeds the width, draw the currentLine
+					drawTextLine(currentLine.trim());
+					cur_x = 0;
+					cur_y += fh;
+	
+					// Start a new line with the current word
+					currentLine = word + " ";
+					currentLineWidth = wordWidth;
+				} else {
+					// Append the word to the current line
+					currentLine += word + " ";
+					currentLineWidth += wordWidth;
+				}
+			}
 
-		let char = ui_char_map[l] || ui_char_stubLetter;
-
-		const letter_width = char.size[0]; // stubLetter.length / fh;
-
-		// overflow tests
-
-		// overflow-x : wrap
-		if (cur_x + letter_width > width) {
+			// Draw the last line if there are remaining words
+			if (currentLine) {
+				drawTextLine(currentLine.trim());
+				cur_x = 0;
+				cur_y += fh;
+			}
+		} else {
+			// Simply draw text as it
+			drawTextLine(line);
 			cur_x = 0;
 			cur_y += fh;
 		}
 
-		// overflow-y : hidden
-		if (cur_y + fh > height) {
-			break;
-		}
+	}
 
-		for (let c_y = 0; c_y < fh; c_y++) {
-			for (let c_x = 0; c_x < letter_width; c_x++) {
-				let pxl_val = char.data[c_y * letter_width + c_x];
+	// helper for line
+	function drawTextLine(line: string) {
+		for (let l of line) {
+			_x = -1;
+			_y = 0;
 
-				if (pxl_val > 0) {
-					let px_x = x + cur_x + c_x;
-					let px_y = y + cur_y + c_y;
+			let char = ui_char_map[l] || ui_char_stubLetter;
 
-					let color = pxl_val === 2 ? colorShadow : colorFill;
-					setPixel(px_x, px_y, color);
+			const letter_width = char.size[0];
+
+			// overflow tests
+
+			// overflow-x : wrap
+			if (cur_x + letter_width > width) {
+				cur_x = 0;
+				cur_y += fh;
+			}
+
+			// overflow-y : hidden
+			if (cur_y + fh > height) {
+				break;
+			}
+
+			for (let c_y = 0; c_y < fh; c_y++) {
+				for (let c_x = 0; c_x < letter_width; c_x++) {
+					let pxl_val = char.data[c_y * letter_width + c_x];
+
+					if (pxl_val > 0) {
+						let px_x = x + cur_x + c_x;
+						let px_y = y + cur_y + c_y;
+
+						let color = pxl_val === 2 ? colorShadow : colorFill;
+						setPixel(px_x, px_y, color);
+					}
 				}
 			}
-		}
 
-		cur_x += letter_width + 1; // TODO: test max length ?
+			cur_x += letter_width + 1;
+		}
 	}
 }
 
