@@ -147,7 +147,7 @@ export function RemakeUI() {
 
 		let result = await dialog.ShowDialog();
 
-		Debug_Printf(0, 0, false, `Dialog closed with result ${result}`);
+		// Debug_Printf(0, 0, false, `Dialog closed with result ${result}`);
 		LCD_Refresh();
 
 		// END YOUR CODE HERE

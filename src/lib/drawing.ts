@@ -10,6 +10,7 @@ import {
 	WIDTH,
 	HEIGHT,
 } from "../specs";
+import { ui_char_map, ui_char_stubLetter } from "../common/sysUIFont";
 
 /**
  * TODO !!
@@ -234,19 +235,10 @@ export function textWrap(
 		_x = -1;
 		_y = 0;
 
-		const stubLetter = [
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1,
-			1, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0,
-			0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0,
-			0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 1,
-			1, 0, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1,
-			0, 2, 2, 2, 2, 2, 2, 2, 2, 0, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-		];
 
-		let char = stubLetter; // TODO: load form map
+		let char = ui_char_map[l] || ui_char_stubLetter;
 
-		const letter_width = stubLetter.length / fh;
+		const letter_width = char.size[0]; // stubLetter.length / fh;
 
 		// overflow tests
 
@@ -263,7 +255,7 @@ export function textWrap(
 
 		for (let c_y = 0; c_y < fh; c_y++) {
 			for (let c_x = 0; c_x < letter_width; c_x++) {
-				let pxl_val = char[c_y * letter_width + c_x];
+				let pxl_val = char.data[c_y * letter_width + c_x];
 
 				if (pxl_val > 0) {
 					let px_x = x + cur_x + c_x;
@@ -275,7 +267,7 @@ export function textWrap(
 			}
 		}
 
-		cur_x += letter_width; // TODO: test max length ?
+		cur_x += letter_width + 1; // TODO: test max length ?
 	}
 }
 
@@ -303,36 +295,14 @@ export function text(
 	for (let l of text) {
 		_x = -1;
 		_y = 0;
+		 
+		let char = ui_char_map[l] || ui_char_stubLetter;
 
-		const stubLetter = [
-			0,0,0,0, 0,0,0,0,0,
-			1,1,1,1, 1,1,1,1,0,
-			1,1,1,1, 1,1,1,1,0,
-			1,1,0,0, 0,0,1,1,0,
-			1,1,0,0, 0,0,1,1,0,
-			1,1,0,0, 0,0,1,1,0,
-			1,1,0,0, 0,0,1,1,0,
-			1,1,0,0, 0,0,1,1,0,
-			1,1,0,0, 0,0,1,1,0,
-			1,1,0,0, 0,0,1,1,0,
-			1,1,0,0, 0,0,1,1,0,
-			1,1,0,0, 0,0,1,1,0,
-			1,1,1,1, 1,1,1,1,0,
-			1,1,1,1, 1,1,1,1,0,
-			2,2,2,2, 2,2,2,2,0,
-			2,2,2,2, 2,2,2,2,0,
-			0,0,0,0, 0,0,0,0,0,
-			0,0,0,0, 0,0,0,0,0,
-		];
-
-		
-		let char = stubLetter; // TODO: load form map
-
-		const letter_width = stubLetter.length / fh;
+		const letter_width = char.size[0]; // char.length / fh;
 
 		for (let c_y = 0; c_y < fh; c_y++) {
 			for (let c_x = 0; c_x < letter_width; c_x++) {
-				let pxl_val = char[(c_y * letter_width) + c_x];
+				let pxl_val = char.data[(c_y * letter_width) + c_x];
 
 				if (pxl_val > 0) {
 					let px_x = x + cur_x + c_x;
@@ -345,9 +315,7 @@ export function text(
 		}
 		 
 
-		cur_x += letter_width; // TODO: test max length ?
-		
-
+		cur_x += letter_width + 1; // TODO: test max length ?
 		
 	}
 	// ctx.font = "48px serif";
