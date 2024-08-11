@@ -5,6 +5,7 @@
 		setContext,
 		createEventDispatcher,
 	} from "svelte";
+  import { get } from "svelte/store";
 
 	import {
 		key,
@@ -15,10 +16,10 @@
 		pixelRatio,
 		props,
 		time,
+		mouseDown,
 	} from "../specs";
 
-	import { handleTouch } from "./drawing";
-	import { touchEventToPosition } from "./helpers";
+	import { touchEventToPosition, handleTouch } from "./helpers";
 
 	export let attributes = {};
 
@@ -47,24 +48,6 @@
 		},
 	});
 
-	// function render(dt) {
-	// 	context.save();
-	// 	context.scale($pixelRatio, $pixelRatio);
-	// 	listeners.forEach((entity) => {
-	// 		try {
-	// 			if (entity.mounted && entity.ready && entity.render) {
-	// 				entity.render($props, dt);
-	// 			}
-	// 		} catch (err) {
-	// 			console.error(err);
-	// 			if (killLoopOnError) {
-	// 				cancelAnimationFrame(frame);
-	// 				console.warn("Animation loop stopped due to an error");
-	// 			}
-	// 		}
-	// 	});
-	// 	context.restore();
-	// }
 
 	function handleResize() {
 		//TODO: calculate pixel ratio
@@ -85,35 +68,30 @@
 		dispatch("touchDown", {
 			event: ev,
 		});
-		console.log(ev);
-		handleTouch(...touchEventToPosition(ev));
+		// console.log(ev);
+		handleTouch(...touchEventToPosition(ev), "down");
+		mouseDown.set(true);
 	}
 	function handleTouchUp(ev) {
 		dispatch("touchUp", {
 			event: ev,
 		});
+		handleTouch(...touchEventToPosition(ev), "up");
+		mouseDown.set(false);
 	}
 	function handleTouchMove(ev) {
 		dispatch("touchMove", {
 			event: ev,
 		});
+		let pos = touchEventToPosition(ev);
+		document.getElementById("db-ms-x").innerHTML = "X: " + Math.ceil(pos[0]).toString();
+		document.getElementById("db-ms-y").innerHTML = "Y: " + Math.ceil(pos[1]).toString();
+		let isMouseDown = get(mouseDown);
+		if (isMouseDown) {
+			handleTouch(pos[0], pos[1], "drag");
+		}
 	}
 
-	// function createLoop(fn) {
-	// 	let elapsed = 0;
-	// 	let lastTime = performance.now();
-	// 	(function loop() {
-	// 		frame = requestAnimationFrame(loop);
-	// 		const beginTime = performance.now();
-	// 		const dt = (beginTime - lastTime) / 1000;
-	// 		lastTime = beginTime;
-	// 		elapsed += dt;
-	// 		fn(elapsed, dt);
-	// 	})();
-	// 	return () => {
-	// 		cancelAnimationFrame(frame);
-	// 	};
-	// }
 </script>
 
 <canvas
